@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { height: 100%; overflow: hidden; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #58a6ff; }
+
+/* Resize handle */
+.resize-handle {
+  width: 3px;
+  background: #30363d;
+  cursor: col-resize;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.resize-handle:hover,
+.resize-handle[data-resize-handle-active] {
+  background: #58a6ff;
+}
+.resize-handle-light {
+  background: #d0d7de;
+}
+.resize-handle-light:hover,
+.resize-handle-light[data-resize-handle-active] {
+  background: #0969da;
+}
+
+/* CodeMirror overrides */
+.cm-editor { height: 100% !important; }
+.cm-scroller { overflow: auto !important; font-family: 'Menlo', 'Monaco', 'Consolas', monospace !important; }
+
+/* Search highlight */
+.search-match {
+  border-radius: 3px;
+}
