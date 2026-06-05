@@ -1,8 +1,11 @@
 import { useRef } from 'react'
 import {
   AlignLeft, Minimize2, Copy, Trash2, Upload, Download,
-  ArrowUpDown, Sun, Moon, Check, Pencil, Braces,
+  ArrowUpDown, Sun, Moon, Check, Pencil, Braces, Play,
 } from 'lucide-react'
+
+const isMac = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform)
+const parseShortcut = isMac ? '⌘↵' : 'Ctrl+↵'
 
 function Btn({ onClick, title, children, isDark, active }) {
   const border = isDark ? '#30363d' : '#d0d7de'
@@ -80,7 +83,7 @@ const Sep = ({ isDark }) => (
 )
 
 export default function Toolbar({
-  mode, onEdit, onGenerateTypes,
+  mode, manualParse, onEdit, onParse, onGenerateTypes,
   onFormat, onMinify, onCopy, onClear, onUpload, onDownload,
   onSortKeys, sortKeys, theme, onThemeToggle,
   isDark, copied, hasJson,
@@ -96,8 +99,8 @@ export default function Toolbar({
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
 
-      {/* Edit / Generate Types — only in output mode */}
-      {mode === 'output' && (
+      {/* Output: Edit + Generate Types; Input + manual: Parse */}
+      {mode === 'output' ? (
         <>
           <Btn onClick={onEdit} title="Back to editor" isDark={isDark}>
             <Pencil size={12} /> Edit
@@ -107,7 +110,17 @@ export default function Toolbar({
           </Btn>
           <Sep isDark={isDark} />
         </>
-      )}
+      ) : manualParse ? (
+        <>
+          <Btn onClick={onParse} title={`Parse JSON (${parseShortcut})`} isDark={isDark}>
+            <Play size={12} /> Parse
+            <span style={{ opacity: 0.5, fontSize: 10, fontFamily: 'monospace', marginLeft: 2 }}>
+              {parseShortcut}
+            </span>
+          </Btn>
+          <Sep isDark={isDark} />
+        </>
+      ) : null}
 
       {/* Format / Minify / Sort */}
       <Btn onClick={onFormat} title="Format / Beautify" isDark={isDark}>

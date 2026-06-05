@@ -45,25 +45,31 @@ export default function App() {
   const [forceRevision, setForceRevision] = useState(0)
   const [forceTarget, setForceTarget] = useState('collapsed')
   const [showGenerateModal, setShowGenerateModal] = useState(false)
+  const [manualParse, setManualParse] = useState(false)
 
   const forceTree = useCallback((target) => {
     setForceTarget(target)
     setForceRevision(r => r + 1)
   }, [])
 
-  // Parse on every input change
+  // Auto-parse while in auto mode (before user has ever clicked Edit)
   useEffect(() => {
+    if (manualParse) return
     if (!input.trim()) { setParsed(null); setError(null); return }
     try { setParsed(JSON.parse(input)); setError(null) }
     catch (e) { setError(e.message); setParsed(null) }
-  }, [input])
+  }, [input, manualParse])
 
-  // Auto-switch to output when JSON becomes valid (only from input mode)
   useEffect(() => {
-    if (parsed !== null) {
-      setMode(prev => prev === 'input' ? 'output' : prev)
-    }
-  }, [parsed])
+    if (manualParse) return
+    if (parsed !== null) setMode(prev => prev === 'input' ? 'output' : prev)
+  }, [parsed, manualParse])
+
+  const handleParse = useCallback(() => {
+    if (!input.trim()) { setParsed(null); setError(null); return }
+    try { setParsed(JSON.parse(input)); setError(null); setMode('output') }
+    catch (e) { setError(e.message); setParsed(null) }
+  }, [input])
 
   const handleFormat = useCallback(() => {
     try { setInput(JSON.stringify(JSON.parse(input), null, 2)) } catch {}
@@ -82,9 +88,12 @@ export default function App() {
 
   const handleClear = useCallback(() => {
     setInput('')
+    setParsed(null)
+    setError(null)
     setSelectedPath('')
     setSearchQuery('')
     setMode('input')
+    setManualParse(false)
   }, [])
 
   const handleUpload = useCallback((file) => {
@@ -107,9 +116,21 @@ export default function App() {
   }, [parsed, input])
 
   const handleEdit = useCallback(() => {
+    setManualParse(true)
     setMode('input')
     setSelectedPath('')
   }, [])
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key !== 'Enter') return
+      e.preventDefault()
+      if (mode === 'input' && manualParse) handleParse()
+      else if (mode === 'output') handleEdit()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [mode, manualParse, handleParse, handleEdit])
 
   const stats = useMemo(() => computeStats(input, parsed), [input, parsed])
 
@@ -166,7 +187,9 @@ export default function App() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, justifyContent: 'flex-end' }}>
         <Toolbar
           mode={mode}
+          manualParse={manualParse}
           onEdit={handleEdit}
+          onParse={handleParse}
           onGenerateTypes={() => setShowGenerateModal(true)}
           onFormat={handleFormat}
           onMinify={handleMinify}
